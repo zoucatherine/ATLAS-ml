@@ -1,23 +1,61 @@
 from docx import Document
+from pathlib import Path
 
-# Open the DOCX file
-doc = Document("example.docx")
+# Input file
+input_file = Path("docx/BLS marketing plan 3.28.25 scrubbed.docx")
 
-print("TEXT:")
-print("-" * 30)
+# Open DOCX
+doc = Document(input_file)
+
+markdown = []
 
 # Extract paragraphs
 for paragraph in doc.paragraphs:
-    if paragraph.text.strip():
-        print(paragraph.text)
+    text = paragraph.text.strip()
 
-print("\nTABLES:")
-print("-" * 30)
+    if not text:
+        continue
+
+    # Preserve headings as Markdown headings
+    if paragraph.style.name.startswith("Heading"):
+        try:
+            level = int(paragraph.style.name.split()[-1])
+            markdown.append(f"{'#' * level} {text}")
+        except ValueError:
+            markdown.append(f"## {text}")
+    else:
+        markdown.append(text)
 
 # Extract tables
-for table_num, table in enumerate(doc.tables, start=1):
-    print(f"\nTable {table_num}:")
+for table in doc.tables:
+    if not table.rows:
+        continue
 
-    for row in table.rows:
-        row_data = [cell.text for cell in row.cells]
-        print(row_data)
+    rows = [
+        [cell.text.strip() for cell in row.cells]
+        for row in table.rows
+    ]
+
+    # First row becomes table header
+    header = rows[0]
+
+    markdown.append(
+        "| " + " | ".join(header) + " |"
+    )
+    markdown.append(
+        "| " + " | ".join(["---"] * len(header)) + " |"
+    )
+
+    # Remaining rows
+    for row in rows[1:]:
+        markdown.append(
+            "| " + " | ".join(row) + " |"
+        )
+
+# Save Markdown file
+output_file = Path("output.md")
+
+with open(output_file, "w", encoding="utf-8") as f:
+    f.write("\n\n".join(markdown))
+
+print(f"Saved to {output_file}")
