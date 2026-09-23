@@ -2,7 +2,7 @@ from docx import Document
 from pathlib import Path
 
 # Input file
-input_file = Path("docx/BLS marketing plan 3.28.25 scrubbed.docx")
+input_file = Path("data-extraction/docx/BLS script - Kristen- LAS 103.docx")
 
 # Open DOCX
 doc = Document(input_file)
